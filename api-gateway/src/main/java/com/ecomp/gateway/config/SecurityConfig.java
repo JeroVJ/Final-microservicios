@@ -35,7 +35,7 @@ public class SecurityConfig {
                         .pathMatchers("/actuator/**").permitAll()
                         .pathMatchers("/graphiql").permitAll()
                         .pathMatchers("/auth/**").permitAll()
-                        .pathMatchers("/graphql").authenticated()
+                        .pathMatchers("/graphql").permitAll()
                         .pathMatchers("/api/auth/**").permitAll()
                         .pathMatchers("/api/**").authenticated()
                         .anyExchange().authenticated()
