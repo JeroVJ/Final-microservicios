@@ -49,10 +49,8 @@ public class TourismService {
     @Builder.Default
     private Integer ratingCount = 0;
 
-    @Column(precision = 10, scale = 8)
     private Double latitude;
 
-    @Column(precision = 11, scale = 8)
     private Double longitude;
 
     @Column(name = "transport_type")
