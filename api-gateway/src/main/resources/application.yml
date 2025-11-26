@@ -20,6 +20,13 @@ spring:
   cloud:
     gateway:
       routes:
+        - id: auth-public
+          uri: lb://auth-service
+          predicates:
+            - Path=/auth/**
+          filters:
+            - StripPrefix=0
+
         - id: auth-service
           uri: lb://auth-service
           predicates:
@@ -54,10 +61,10 @@ spring:
             - Path=/api/reviews/**
           filters:
             - StripPrefix=1
-      
+
       default-filters:
         - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
-      
+
       globalcors:
         corsConfigurations:
           '[/**]':

@@ -33,8 +33,9 @@ public class SecurityConfig {
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .authorizeExchange(exchanges -> exchanges
                         .pathMatchers("/actuator/**").permitAll()
-                        .pathMatchers("/graphql").authenticated()
                         .pathMatchers("/graphiql").permitAll()
+                        .pathMatchers("/auth/**").permitAll()
+                        .pathMatchers("/graphql").authenticated()
                         .pathMatchers("/api/auth/**").permitAll()
                         .pathMatchers("/api/**").authenticated()
                         .anyExchange().authenticated()
