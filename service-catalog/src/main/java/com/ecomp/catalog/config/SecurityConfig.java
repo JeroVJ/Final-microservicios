@@ -1,8 +1,8 @@
 package com.ecomp.catalog.config;
 
-import jakarta.ws.rs.HttpMethod;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -35,10 +35,13 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/services/health").permitAll()
                         .requestMatchers("/actuator/**").permitAll()
-                        .requestMatchers("/services").permitAll()
-                        .requestMatchers("/services/{id}").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/services").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/services/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/services").permitAll()
+                        .requestMatchers(HttpMethod.PUT, "/services/**").permitAll()
+                        .requestMatchers(HttpMethod.DELETE, "/services/**").permitAll()
                         .requestMatchers("/services/category/**").permitAll()
+                        .requestMatchers("/questions/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
@@ -62,7 +65,7 @@ public class SecurityConfig {
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
-        
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
