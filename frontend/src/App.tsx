@@ -70,14 +70,16 @@ export default function App() {
                                 onClick={() => setShowCreateService(true)}
                                 className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-600 text-white text-sm font-medium hover:shadow-lg hover:shadow-emerald-500/30 transition-all duration-300 flex items-center gap-2"
                             >
-                                + Crear Servicio
+                                <span>➕</span>
+                                Crear Servicio
                             </button>
                         )}
                         <button
                             onClick={() => setShowProfile(true)}
                             className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-sm font-medium hover:bg-white/10 hover:border-white/20 transition-all duration-300 flex items-center gap-2"
                         >
-                            {user?.username || "Perfil"}
+                            <span>👤</span>
+                            {user?.username && <span>{user.username}</span>}
                             {isProvider && (
                                 <span className="ml-1 px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-xs">
                                     Proveedor
@@ -88,7 +90,7 @@ export default function App() {
                             onClick={() => setShowCart(true)}
                             className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-sm font-medium hover:bg-white/10 hover:border-white/20 transition-all duration-300"
                         >
-                            Carrito
+                            🛒 Carrito
                         </button>
                         <button
                             onClick={logout}
@@ -106,7 +108,7 @@ export default function App() {
                         Descubre Servicios
                     </h2>
                     <p className="text-slate-400 text-center mb-8">
-                        Encuentra los mejores servicios ecologicos cerca de ti
+                        Encuentra los mejores servicios ecológicos cerca de ti
                     </p>
                     <div className="relative group">
                         <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-purple-600 rounded-2xl blur opacity-20 group-hover:opacity-30 transition-opacity duration-300"></div>
@@ -158,14 +160,14 @@ export default function App() {
                                     </h3>
                                     {srv.rating && (
                                         <div className="flex items-center gap-1 bg-yellow-500/10 border border-yellow-500/20 rounded-lg px-2 py-1">
-                                            <span className="text-yellow-500 text-xs">*</span>
+                                            <span className="text-yellow-500 text-xs">★</span>
                                             <span className="text-yellow-500 text-xs font-medium">{srv.rating}</span>
                                         </div>
                                     )}
                                 </div>
 
                                 <p className="text-sm text-slate-400 mb-4 line-clamp-2">
-                                    {srv.description ?? "Sin descripcion"}
+                                    {srv.description ?? "Sin descripción"}
                                 </p>
 
                                 <div className="flex items-center justify-between pt-4 border-t border-white/5">
@@ -176,9 +178,9 @@ export default function App() {
                                         </span>
                                     </div>
                                     <div className="flex flex-col items-end">
-                                        <span className="text-xs text-slate-500 mb-1">Ubicacion</span>
+                                        <span className="text-xs text-slate-500 mb-1">Ubicación</span>
                                         <span className="text-sm text-slate-300">
-                                            {srv.city ?? "-"}
+                                            {srv.city ?? "—"}
                                         </span>
                                     </div>
                                 </div>
@@ -198,7 +200,7 @@ export default function App() {
                 {!loading && list.length === 0 && (
                     <div className="text-center py-12">
                         <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-slate-800/50 border border-white/10 flex items-center justify-center">
-                            <span className="text-4xl">?</span>
+                            <span className="text-4xl">🔍</span>
                         </div>
                         <p className="text-slate-400 mb-4">No se encontraron servicios</p>
                         {isProvider && (
@@ -206,7 +208,7 @@ export default function App() {
                                 onClick={() => setShowCreateService(true)}
                                 className="px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-600 text-white font-medium hover:shadow-lg hover:shadow-emerald-500/30 transition-all"
                             >
-                                Crea el primer servicio!
+                                ¡Crea el primer servicio!
                             </button>
                         )}
                     </div>
@@ -217,8 +219,8 @@ export default function App() {
             {showProfile && <UserProfile onClose={() => setShowProfile(false)} />}
             {showCart && <ShoppingCart onClose={() => setShowCart(false)} />}
             {showCreateService && (
-                <CreateService
-                    onClose={() => setShowCreateService(false)}
+                <CreateService 
+                    onClose={() => setShowCreateService(false)} 
                     onCreated={() => refetch({ filter: "" })}
                 />
             )}

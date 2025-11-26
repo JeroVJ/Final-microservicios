@@ -19,13 +19,13 @@ type ServiceInput = {
 
 const CATEGORIES = [
     "Ecoturismo",
-    "Transporte Ecologico",
+    "Transporte Ecológico",
     "Alojamiento Sostenible",
-    "Alimentacion Organica",
+    "Alimentación Orgánica",
     "Actividades al Aire Libre",
     "Tours Guiados",
     "Experiencias Culturales",
-    "Conservacion",
+    "Conservación",
 ];
 
 const TRANSPORT_TYPES = [
@@ -33,7 +33,7 @@ const TRANSPORT_TYPES = [
     "Caminata",
     "Kayak",
     "Caballo",
-    "Vehiculo Electrico",
+    "Vehículo Eléctrico",
     "Bote Solar",
     "Ninguno",
 ];
@@ -68,9 +68,9 @@ export default function CreateService({ onClose, onCreated }: { onClose: () => v
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-
+        
         if (!formData.name || !formData.price || !formData.category) {
-            alert("Por favor completa los campos obligatorios: Nombre, Precio y Categoria");
+            alert("Por favor completa los campos obligatorios: Nombre, Precio y Categoría");
             return;
         }
 
@@ -105,13 +105,14 @@ export default function CreateService({ onClose, onCreated }: { onClose: () => v
             >
                 <div className="relative overflow-hidden bg-gradient-to-br from-emerald-500/20 to-cyan-500/20 px-8 py-6">
                     <h2 className="text-3xl font-bold text-white">Crear Nuevo Servicio</h2>
-                    <p className="text-slate-300 mt-1">Completa la informacion de tu servicio ecologico</p>
+                    <p className="text-slate-300 mt-1">Completa la información de tu servicio ecológico</p>
                 </div>
 
                 <form onSubmit={handleSubmit} className="p-8 space-y-6">
+                    {/* Información Básica */}
                     <div className="space-y-4">
                         <h3 className="text-lg font-semibold text-white border-b border-white/10 pb-2">
-                            Informacion Basica
+                            Información Básica
                         </h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="md:col-span-2">
@@ -142,14 +143,14 @@ export default function CreateService({ onClose, onCreated }: { onClose: () => v
                             </div>
 
                             <div>
-                                <label className="block text-sm text-slate-400 mb-2">Categoria *</label>
+                                <label className="block text-sm text-slate-400 mb-2">Categoría *</label>
                                 <select
                                     value={formData.category}
                                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                                     className="w-full bg-slate-800/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500/50"
                                     required
                                 >
-                                    <option value="">Selecciona una categoria</option>
+                                    <option value="">Selecciona una categoría</option>
                                     {CATEGORIES.map((cat) => (
                                         <option key={cat} value={cat}>{cat}</option>
                                     ))}
@@ -158,7 +159,7 @@ export default function CreateService({ onClose, onCreated }: { onClose: () => v
                         </div>
 
                         <div>
-                            <label className="block text-sm text-slate-400 mb-2">Descripcion</label>
+                            <label className="block text-sm text-slate-400 mb-2">Descripción</label>
                             <textarea
                                 value={formData.description}
                                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -168,9 +169,10 @@ export default function CreateService({ onClose, onCreated }: { onClose: () => v
                         </div>
                     </div>
 
+                    {/* Ubicación */}
                     <div className="space-y-4">
                         <h3 className="text-lg font-semibold text-white border-b border-white/10 pb-2">
-                            Ubicacion
+                            Ubicación
                         </h3>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
@@ -180,12 +182,12 @@ export default function CreateService({ onClose, onCreated }: { onClose: () => v
                                     value={formData.city}
                                     onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                                     className="w-full bg-slate-800/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500/50"
-                                    placeholder="Ej: Bogota"
+                                    placeholder="Ej: Bogotá"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm text-slate-400 mb-2">Codigo de Pais</label>
+                                <label className="block text-sm text-slate-400 mb-2">Código de País</label>
                                 <input
                                     type="text"
                                     value={formData.countryCode}
@@ -238,6 +240,45 @@ export default function CreateService({ onClose, onCreated }: { onClose: () => v
                         </div>
                     </div>
 
+                    {/* Horarios (opcional) */}
+                    <div className="space-y-4">
+                        <h3 className="text-lg font-semibold text-white border-b border-white/10 pb-2">
+                            Horarios (Opcional)
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm text-slate-400 mb-2">Hora de Salida</label>
+                                <input
+                                    type="time"
+                                    value={formData.departureTime}
+                                    onChange={(e) => setFormData({ ...formData, departureTime: e.target.value })}
+                                    className="w-full bg-slate-800/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500/50"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm text-slate-400 mb-2">Hora de Llegada</label>
+                                <input
+                                    type="time"
+                                    value={formData.arrivalTime}
+                                    onChange={(e) => setFormData({ ...formData, arrivalTime: e.target.value })}
+                                    className="w-full bg-slate-800/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500/50"
+                                />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm text-slate-400 mb-2">Descripción de la Ruta</label>
+                            <textarea
+                                value={formData.routeDescription}
+                                onChange={(e) => setFormData({ ...formData, routeDescription: e.target.value })}
+                                className="w-full bg-slate-800/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500/50 h-20"
+                                placeholder="Describe el itinerario o ruta del servicio..."
+                            />
+                        </div>
+                    </div>
+
+                    {/* Botones */}
                     <div className="flex gap-4 justify-end pt-4 border-t border-white/5">
                         <button
                             type="button"

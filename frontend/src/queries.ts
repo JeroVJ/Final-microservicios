@@ -75,6 +75,7 @@ export const GET_SERVICE = gql`
     }
 `;
 
+// Crear, actualizar y eliminar servicios
 export const CREATE_SERVICE = gql`
     mutation CreateService($input: ServiceInput!) {
         createService(input: $input) {
