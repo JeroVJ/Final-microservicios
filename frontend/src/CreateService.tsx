@@ -12,8 +12,6 @@ type ServiceInput = {
     latitude: string;
     longitude: string;
     transportType: string;
-    departureTime: string;
-    arrivalTime: string;
     routeDescription: string;
 };
 
@@ -41,13 +39,15 @@ const TRANSPORT_TYPES = [
 export default function CreateService({ onClose, onCreated }: { onClose: () => void; onCreated?: () => void }) {
     const [createService, { loading }] = useMutation(CREATE_SERVICE, {
         refetchQueries: [{ query: GET_SERVICES, variables: { filter: "" } }],
-        onCompleted: () => {
+        onCompleted: (data) => {
+            console.log("Service created successfully:", data);
             onCreated?.();
             onClose();
         },
         onError: (error) => {
             console.error("Error creating service:", error);
-            alert("Error al crear el servicio: " + error.message);
+            console.error("Error details:", error.graphQLErrors);
+            alert("Error al crear el servicio. Por favor verifica los datos e intenta de nuevo.");
         },
     });
 
@@ -61,37 +61,62 @@ export default function CreateService({ onClose, onCreated }: { onClose: () => v
         latitude: "",
         longitude: "",
         transportType: "",
-        departureTime: "",
-        arrivalTime: "",
         routeDescription: "",
     });
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         if (!formData.name || !formData.price || !formData.category) {
             alert("Por favor completa los campos obligatorios: Nombre, Precio y Categoría");
             return;
         }
 
-        await createService({
-            variables: {
-                input: {
-                    name: formData.name,
-                    description: formData.description || null,
-                    price: parseFloat(formData.price) || 0,
-                    category: formData.category,
-                    city: formData.city || null,
-                    countryCode: formData.countryCode || null,
-                    latitude: formData.latitude ? parseFloat(formData.latitude) : null,
-                    longitude: formData.longitude ? parseFloat(formData.longitude) : null,
-                    transportType: formData.transportType || null,
-                    departureTime: formData.departureTime || null,
-                    arrivalTime: formData.arrivalTime || null,
-                    routeDescription: formData.routeDescription || null,
-                },
-            },
-        });
+        // Validar que el precio sea un número válido
+        const priceValue = parseFloat(formData.price);
+        if (isNaN(priceValue) || priceValue < 0) {
+            alert("Por favor ingresa un precio válido");
+            return;
+        }
+
+        // Construir el input limpiando campos vacíos
+        const input: any = {
+            name: formData.name.trim(),
+            description: formData.description.trim() || null,
+            price: priceValue,
+            category: formData.category,
+            city: formData.city.trim() || null,
+            countryCode: formData.countryCode.trim() || null,
+        };
+
+        // Solo agregar coordenadas si ambas están presentes y son válidas
+        if (formData.latitude && formData.longitude) {
+            const lat = parseFloat(formData.latitude);
+            const lon = parseFloat(formData.longitude);
+            if (!isNaN(lat) && !isNaN(lon)) {
+                input.latitude = lat;
+                input.longitude = lon;
+            }
+        }
+
+        // Agregar campos opcionales solo si tienen valor
+        if (formData.transportType) {
+            input.transportType = formData.transportType;
+        }
+
+        if (formData.routeDescription.trim()) {
+            input.routeDescription = formData.routeDescription.trim();
+        }
+
+        console.log("Sending input:", input);
+
+        try {
+            await createService({
+                variables: { input },
+            });
+        } catch (err) {
+            console.error("Mutation error:", err);
+        }
     };
 
     return (
@@ -134,6 +159,7 @@ export default function CreateService({ onClose, onCreated }: { onClose: () => v
                                 <input
                                     type="number"
                                     step="0.01"
+                                    min="0"
                                     value={formData.price}
                                     onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                                     className="w-full bg-slate-800/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500/50"
@@ -240,33 +266,11 @@ export default function CreateService({ onClose, onCreated }: { onClose: () => v
                         </div>
                     </div>
 
-                    {/* Horarios (opcional) */}
+                    {/* Descripción de Ruta */}
                     <div className="space-y-4">
                         <h3 className="text-lg font-semibold text-white border-b border-white/10 pb-2">
-                            Horarios (Opcional)
+                            Información Adicional (Opcional)
                         </h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm text-slate-400 mb-2">Hora de Salida</label>
-                                <input
-                                    type="time"
-                                    value={formData.departureTime}
-                                    onChange={(e) => setFormData({ ...formData, departureTime: e.target.value })}
-                                    className="w-full bg-slate-800/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500/50"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm text-slate-400 mb-2">Hora de Llegada</label>
-                                <input
-                                    type="time"
-                                    value={formData.arrivalTime}
-                                    onChange={(e) => setFormData({ ...formData, arrivalTime: e.target.value })}
-                                    className="w-full bg-slate-800/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500/50"
-                                />
-                            </div>
-                        </div>
-
                         <div>
                             <label className="block text-sm text-slate-400 mb-2">Descripción de la Ruta</label>
                             <textarea
@@ -290,7 +294,7 @@ export default function CreateService({ onClose, onCreated }: { onClose: () => v
                         <button
                             type="submit"
                             disabled={loading}
-                            className="px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-600 text-white font-medium hover:shadow-lg hover:shadow-emerald-500/50 transition-all disabled:opacity-50"
+                            className="px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-600 text-white font-medium hover:shadow-lg hover:shadow-emerald-500/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {loading ? "Creando..." : "Crear Servicio"}
                         </button>
