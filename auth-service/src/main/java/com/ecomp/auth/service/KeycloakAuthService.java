@@ -30,13 +30,19 @@ public class KeycloakAuthService {
     @Value("${keycloak.client-secret}")
     private String clientSecret;
 
+    @Value("${keycloak.admin-username}")
+    private String adminUsername;
+
+    @Value("${keycloak.admin-password}")
+    private String adminPassword;
+
     public KeycloakAuthService(WebClient.Builder webClientBuilder) {
         this.webClient = webClientBuilder.build();
     }
 
     public Mono<TokenResponse> login(LoginRequest request) {
         String tokenUrl = keycloakUrl + "/realms/" + realm + "/protocol/openid-connect/token";
-        
+
         return webClient.post()
                 .uri(tokenUrl)
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
@@ -53,7 +59,7 @@ public class KeycloakAuthService {
 
     public Mono<TokenResponse> refreshToken(String refreshToken) {
         String tokenUrl = keycloakUrl + "/realms/" + realm + "/protocol/openid-connect/token";
-        
+
         return webClient.post()
                 .uri(tokenUrl)
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
@@ -69,7 +75,7 @@ public class KeycloakAuthService {
 
     public Mono<Void> logout(String refreshToken) {
         String logoutUrl = keycloakUrl + "/realms/" + realm + "/protocol/openid-connect/logout";
-        
+
         return webClient.post()
                 .uri(logoutUrl)
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
@@ -84,7 +90,7 @@ public class KeycloakAuthService {
     @SuppressWarnings("unchecked")
     public Mono<UserInfo> getUserInfo(String accessToken) {
         String userInfoUrl = keycloakUrl + "/realms/" + realm + "/protocol/openid-connect/userinfo";
-        
+
         return webClient.get()
                 .uri(userInfoUrl)
                 .header("Authorization", "Bearer " + accessToken)
@@ -102,31 +108,38 @@ public class KeycloakAuthService {
     }
 
     public Mono<Boolean> register(RegisterRequest request) {
-        // Para registro, necesitamos usar la Admin API de Keycloak
-        // Primero obtenemos un token de admin
+        log.info("Starting registration for user: {}", request.getUsername());
         return getAdminToken()
-                .flatMap(adminToken -> createUser(adminToken, request))
+                .flatMap(adminToken -> {
+                    log.info("Got admin token, creating user...");
+                    return createUser(adminToken, request);
+                })
+                .doOnSuccess(result -> log.info("Registration result for {}: {}", request.getUsername(), result))
                 .doOnError(e -> log.error("Registration failed for {}: {}", request.getUsername(), e.getMessage()));
     }
 
     private Mono<String> getAdminToken() {
         String tokenUrl = keycloakUrl + "/realms/master/protocol/openid-connect/token";
-        
+        log.debug("Getting admin token from: {}", tokenUrl);
+
         return webClient.post()
                 .uri(tokenUrl)
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                 .body(BodyInserters.fromFormData("grant_type", "password")
                         .with("client_id", "admin-cli")
-                        .with("username", "admin")
-                        .with("password", "admin"))
+                        .with("username", adminUsername)
+                        .with("password", adminPassword))
                 .retrieve()
                 .bodyToMono(Map.class)
-                .map(map -> (String) map.get("access_token"));
+                .map(map -> (String) map.get("access_token"))
+                .doOnSuccess(token -> log.debug("Admin token obtained successfully"))
+                .doOnError(e -> log.error("Failed to get admin token: {}", e.getMessage()));
     }
 
     private Mono<Boolean> createUser(String adminToken, RegisterRequest request) {
         String usersUrl = keycloakUrl + "/admin/realms/" + realm + "/users";
-        
+        log.debug("Creating user at: {}", usersUrl);
+
         Map<String, Object> userRepresentation = Map.of(
                 "username", request.getUsername(),
                 "email", request.getEmail(),
@@ -138,8 +151,7 @@ public class KeycloakAuthService {
                         "type", "password",
                         "value", request.getPassword(),
                         "temporary", false
-                )),
-                "realmRoles", List.of(request.getRole() != null ? request.getRole() : "CLIENT")
+                ))
         );
 
         return webClient.post()
@@ -149,7 +161,11 @@ public class KeycloakAuthService {
                 .bodyValue(userRepresentation)
                 .retrieve()
                 .toBodilessEntity()
-                .map(response -> response.getStatusCode().is2xxSuccessful())
+                .map(response -> {
+                    log.info("User creation response status: {}", response.getStatusCode());
+                    return response.getStatusCode().is2xxSuccessful();
+                })
+                .doOnError(e -> log.error("Failed to create user: {}", e.getMessage()))
                 .onErrorReturn(false);
     }
 
