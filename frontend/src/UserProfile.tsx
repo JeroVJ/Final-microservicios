@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import { GET_CURRENT_USER_PROFILE, CREATE_OR_UPDATE_USER_PROFILE } from "./queries";
 import {useMutation, useQuery} from "@apollo/client/react";
@@ -21,22 +21,40 @@ export default function UserProfile({ onClose }: { onClose: () => void }) {
         GET_CURRENT_USER_PROFILE
     );
 
-    const [updateProfile] = useMutation(CREATE_OR_UPDATE_USER_PROFILE, {
+    const [updateProfile, { loading: saving }] = useMutation(CREATE_OR_UPDATE_USER_PROFILE, {
         refetchQueries: [{ query: GET_CURRENT_USER_PROFILE }],
     });
 
     const profile = data?.currentUserProfile;
+    
     const [formData, setFormData] = useState({
-        username: profile?.username || "",
-        email: profile?.email || "",
-        age: profile?.age || "",
-        description: profile?.description || "",
-        role: profile?.role || "CLIENT",
-        phone: profile?.phone || "",
-        website: profile?.website || "",
-        socialMedia: profile?.socialMedia || "",
+        username: "",
+        email: "",
+        age: "" as string | number,
+        description: "",
+        role: "CLIENT" as "CLIENT" | "PROVIDER",
+        phone: "",
+        website: "",
+        socialMedia: "",
     });
-    const [photo, setPhoto] = useState(profile?.photoBase64 || "");
+    const [photo, setPhoto] = useState("");
+
+    // Actualizar el formulario cuando lleguen los datos del perfil
+    useEffect(() => {
+        if (profile) {
+            setFormData({
+                username: profile.username || "",
+                email: profile.email || "",
+                age: profile.age || "",
+                description: profile.description || "",
+                role: profile.role || "CLIENT",
+                phone: profile.phone || "",
+                website: profile.website || "",
+                socialMedia: profile.socialMedia || "",
+            });
+            setPhoto(profile.photoBase64 || "");
+        }
+    }, [profile]);
 
     const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -50,16 +68,20 @@ export default function UserProfile({ onClose }: { onClose: () => void }) {
     };
 
     const handleSubmit = async () => {
-        await updateProfile({
-            variables: {
-                input: {
-                    ...formData,
-                    age: formData.age ? parseInt(formData.age.toString()) : null,
-                    photoBase64: photo || null,
+        try {
+            await updateProfile({
+                variables: {
+                    input: {
+                        ...formData,
+                        age: formData.age ? parseInt(formData.age.toString()) : null,
+                        photoBase64: photo || null,
+                    },
                 },
-            },
-        });
-        onClose();
+            });
+            onClose();
+        } catch (error) {
+            console.error("Error saving profile:", error);
+        }
     };
 
     if (loading) {
@@ -203,9 +225,10 @@ export default function UserProfile({ onClose }: { onClose: () => void }) {
                         <button
                             type="button"
                             onClick={handleSubmit}
-                            className="px-6 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-600 text-white font-medium hover:shadow-lg hover:shadow-cyan-500/50 transition-all"
+                            disabled={saving}
+                            className="px-6 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-600 text-white font-medium hover:shadow-lg hover:shadow-cyan-500/50 transition-all disabled:opacity-50"
                         >
-                            Guardar
+                            {saving ? "Guardando..." : "Guardar"}
                         </button>
                     </div>
                 </div>
