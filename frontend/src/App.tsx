@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { GET_SERVICES } from "./queries";
+import { GET_SERVICES, GET_CURRENT_USER_PROFILE } from "./queries";
 import ServiceDetail from "./ServiceDetail";
 import UserProfile from "./UserProfile";
 import ShoppingCart from "./ShoppingCart";
 import Register from "./Register";
+import CreateService from "./CreateService";
 import { useAuth } from "./auth";
 import { useQuery } from "@apollo/client/react";
 
@@ -17,6 +18,13 @@ type Service = {
     category?: string | null;
 };
 
+type UserProfileType = {
+    keycloakId: string;
+    username: string;
+    email: string;
+    role: string;
+};
+
 type ServicesData = { services: Service[] };
 type ServicesVars = { filter?: string | null };
 
@@ -27,13 +35,20 @@ export default function App() {
     const [showProfile, setShowProfile] = useState(false);
     const [showCart, setShowCart] = useState(false);
     const [showRegister, setShowRegister] = useState(false);
+    const [showCreateService, setShowCreateService] = useState(false);
 
     const { data, loading, error, refetch } = useQuery<ServicesData, ServicesVars>(
         GET_SERVICES,
         { variables: { filter: "" }, skip: !authenticated }
     );
 
+    const { data: profileData } = useQuery<{ currentUserProfile: UserProfileType | null }>(
+        GET_CURRENT_USER_PROFILE,
+        { skip: !authenticated }
+    );
+
     const list = data?.services ?? [];
+    const isProvider = profileData?.currentUserProfile?.role === "PROVIDER";
 
     // Pantalla de carga
     if (!ready) {
@@ -112,12 +127,26 @@ export default function App() {
                         </h1>
                     </div>
                     <div className="flex items-center gap-4">
+                        {isProvider && (
+                            <button
+                                onClick={() => setShowCreateService(true)}
+                                className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-600 text-white text-sm font-medium hover:shadow-lg hover:shadow-emerald-500/30 transition-all duration-300 flex items-center gap-2"
+                            >
+                                <span>➕</span>
+                                Crear Servicio
+                            </button>
+                        )}
                         <button
                             onClick={() => setShowProfile(true)}
                             className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-sm font-medium hover:bg-white/10 hover:border-white/20 transition-all duration-300 flex items-center gap-2"
                         >
                             <span>👤</span>
                             {user?.username && <span>{user.username}</span>}
+                            {isProvider && (
+                                <span className="ml-1 px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-xs">
+                                    Proveedor
+                                </span>
+                            )}
                         </button>
                         <button
                             onClick={() => setShowCart(true)}
@@ -235,7 +264,15 @@ export default function App() {
                         <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-slate-800/50 border border-white/10 flex items-center justify-center">
                             <span className="text-4xl">🔍</span>
                         </div>
-                        <p className="text-slate-400">No se encontraron servicios</p>
+                        <p className="text-slate-400 mb-4">No se encontraron servicios</p>
+                        {isProvider && (
+                            <button
+                                onClick={() => setShowCreateService(true)}
+                                className="px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-600 text-white font-medium hover:shadow-lg hover:shadow-emerald-500/30 transition-all"
+                            >
+                                ¡Crea el primer servicio!
+                            </button>
+                        )}
                     </div>
                 )}
             </main>
@@ -243,6 +280,15 @@ export default function App() {
             {openId && <ServiceDetail id={openId} onClose={() => setOpenId(null)} />}
             {showProfile && <UserProfile onClose={() => setShowProfile(false)} />}
             {showCart && <ShoppingCart onClose={() => setShowCart(false)} />}
+            {showCreateService && (
+                <CreateService
+                    onClose={() => setShowCreateService(false)}
+                    onCreated={() => {
+                        setShowCreateService(false);
+                        refetch({ filter: "" });
+                    }}
+                />
+            )}
         </div>
     );
 }

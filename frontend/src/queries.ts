@@ -1,12 +1,5 @@
 import { gql } from "@apollo/client";
 
-// Autenticación
-export const REGISTER_USER = gql`
-    mutation RegisterUser($input: RegisterInput!) {
-        register(input: $input)
-    }
-`;
-
 // Servicios
 export const GET_SERVICES = gql`
     query GetServices($filter: String) {
@@ -34,7 +27,86 @@ export const GET_SERVICE = gql`
             category
             countryCode
             providerId
+            latitude
+            longitude
+            transportType
+            departureTime
+            arrivalTime
+            routeDescription
+            images {
+                id
+                imageUrl
+                imageBase64
+                isPrimary
+            }
+            questions {
+                id
+                userId
+                question
+                answer
+                answeredAt
+                createdAt
+            }
+            reviews {
+                id
+                userId
+                username
+                rating
+                comment
+                createdAt
+            }
+            countryInfo {
+                name
+                capital
+                region
+                population
+                currency
+                flag
+                languages
+            }
+            weatherInfo {
+                description
+                temperature
+                humidity
+                windSpeed
+                icon
+            }
         }
+    }
+`;
+
+// Crear, actualizar y eliminar servicios
+export const CREATE_SERVICE = gql`
+    mutation CreateService($input: ServiceInput!) {
+        createService(input: $input) {
+            id
+            name
+            description
+            price
+            category
+            city
+            countryCode
+        }
+    }
+`;
+
+export const UPDATE_SERVICE = gql`
+    mutation UpdateService($id: ID!, $input: ServiceInput!) {
+        updateService(id: $id, input: $input) {
+            id
+            name
+            description
+            price
+            category
+            city
+            countryCode
+        }
+    }
+`;
+
+export const DELETE_SERVICE = gql`
+    mutation DeleteService($id: ID!) {
+        deleteService(id: $id)
     }
 `;
 
@@ -131,22 +203,61 @@ export const CHECKOUT_CART = gql`
     }
 `;
 
-// Servicios - Crear (para proveedores)
-export const CREATE_SERVICE = gql`
-    mutation CreateService($input: ServiceInput!) {
-        createService(input: $input) {
+// Reviews
+export const GET_REVIEWS_BY_SERVICE = gql`
+    query GetReviewsByService($serviceId: String!) {
+        reviewsByService(serviceId: $serviceId) {
             id
-            name
-            description
-            price
-            category
-            city
+            serviceId
+            userId
+            username
+            rating
+            comment
+            createdAt
         }
     }
 `;
 
-export const DELETE_SERVICE = gql`
-    mutation DeleteService($id: ID!) {
-        deleteService(id: $id)
+export const CREATE_REVIEW = gql`
+    mutation CreateReview($input: ReviewInput!) {
+        createReview(input: $input) {
+            id
+            serviceId
+            userId
+            username
+            rating
+            comment
+            createdAt
+        }
+    }
+`;
+
+// Preguntas
+export const ASK_QUESTION = gql`
+    mutation AskQuestion($input: QuestionInput!) {
+        askQuestion(input: $input) {
+            id
+            userId
+            question
+            answer
+            createdAt
+        }
+    }
+`;
+
+export const ANSWER_QUESTION = gql`
+    mutation AnswerQuestion($questionId: ID!, $answer: String!) {
+        answerQuestion(questionId: $questionId, answer: $answer) {
+            id
+            answer
+            answeredAt
+        }
+    }
+`;
+
+// Registro
+export const REGISTER = gql`
+    mutation Register($input: RegisterInput!) {
+        register(input: $input)
     }
 `;
