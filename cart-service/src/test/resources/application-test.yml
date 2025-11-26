@@ -1,0 +1,32 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:testcartdb
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+  
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8080/realms/eco-mp
+          jwk-set-uri: http://localhost:8080/realms/eco-mp/protocol/openid-connect/certs
+
+eureka:
+  client:
+    enabled: false
+
+services:
+  catalog:
+    url: http://localhost:8085
+
+logging:
+  level:
+    com.ecomp: DEBUG

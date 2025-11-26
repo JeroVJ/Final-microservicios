@@ -1,0 +1,177 @@
+# Eco Marketplace GraphQL Schema
+
+# ==================== TYPES ====================
+
+type Service {
+    id: ID!
+    providerId: String!
+    name: String!
+    description: String
+    price: Float
+    category: String
+    city: String
+    countryCode: String
+    rating: Float
+    ratingCount: Int
+    latitude: Float
+    longitude: Float
+    transportType: String
+    departureTime: String
+    arrivalTime: String
+    routeDescription: String
+    images: [ServiceImage]
+    questions: [ServiceQuestion]
+    reviews: [Review]
+    countryInfo: CountryInfo
+    weatherInfo: WeatherInfo
+}
+
+type ServiceImage {
+    id: ID!
+    imageUrl: String
+    imageBase64: String
+    isPrimary: Boolean
+}
+
+type ServiceQuestion {
+    id: ID!
+    userId: String!
+    question: String!
+    answer: String
+    answeredAt: String
+    createdAt: String!
+}
+
+type Review {
+    id: ID!
+    serviceId: String!
+    userId: String!
+    username: String
+    rating: Int!
+    comment: String
+    createdAt: String!
+}
+
+type UserProfile {
+    keycloakId: String!
+    username: String!
+    email: String!
+    age: Int
+    photoBase64: String
+    description: String
+    role: String!
+    phone: String
+    website: String
+    socialMedia: String
+}
+
+type CartItem {
+    id: ID!
+    serviceId: String!
+    serviceName: String
+    serviceCategory: String
+    quantity: Int!
+    unitPrice: Float!
+}
+
+type CountryInfo {
+    name: String
+    capital: String
+    region: String
+    population: Int
+    currency: String
+    flag: String
+    languages: [String]
+}
+
+type WeatherInfo {
+    description: String
+    temperature: Float
+    humidity: Float
+    windSpeed: Float
+    icon: String
+}
+
+# ==================== INPUTS ====================
+
+input ServiceInput {
+    name: String!
+    description: String
+    price: Float
+    category: String
+    city: String
+    countryCode: String
+    latitude: Float
+    longitude: Float
+    transportType: String
+    departureTime: String
+    arrivalTime: String
+    routeDescription: String
+}
+
+input UserProfileInput {
+    username: String!
+    email: String!
+    age: Int
+    photoBase64: String
+    description: String
+    role: String
+    phone: String
+    website: String
+    socialMedia: String
+}
+
+input ReviewInput {
+    serviceId: String!
+    rating: Int!
+    comment: String
+}
+
+input QuestionInput {
+    serviceId: String!
+    question: String!
+}
+
+# ==================== QUERIES ====================
+
+type Query {
+    # Servicios
+    services(filter: String): [Service!]!
+    serviceById(id: ID!): Service
+    
+    # Usuario
+    currentUserProfile: UserProfile
+    
+    # Carrito
+    myCart: [CartItem!]!
+    cartTotal: Float!
+    
+    # Reviews
+    reviewsByService(serviceId: String!): [Review!]!
+}
+
+# ==================== MUTATIONS ====================
+
+type Mutation {
+    # Servicios (solo proveedores)
+    createService(input: ServiceInput!): Service!
+    updateService(id: ID!, input: ServiceInput!): Service!
+    deleteService(id: ID!): Boolean!
+    
+    # Perfil de usuario
+    createOrUpdateUserProfile(input: UserProfileInput!): UserProfile!
+    
+    # Carrito
+    addToCart(serviceId: ID!, quantity: Int): CartItem!
+    updateCartItemQuantity(cartItemId: ID!, quantity: Int!): CartItem!
+    removeFromCart(cartItemId: ID!): Boolean!
+    clearCart: Boolean!
+    checkoutCart: Boolean!
+    
+    # Reviews
+    createReview(input: ReviewInput!): Review!
+    
+    # Preguntas
+    askQuestion(input: QuestionInput!): ServiceQuestion!
+    answerQuestion(questionId: ID!, answer: String!): ServiceQuestion!
+}

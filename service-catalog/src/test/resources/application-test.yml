@@ -1,0 +1,35 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:testcatalogdb
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+  
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8080/realms/eco-mp
+          jwk-set-uri: http://localhost:8080/realms/eco-mp/protocol/openid-connect/certs
+
+eureka:
+  client:
+    enabled: false
+
+external:
+  restcountries:
+    url: https://restcountries.com/v3.1
+  openweather:
+    url: https://api.openweathermap.org/data/2.5
+    apikey: test-key
+
+logging:
+  level:
+    com.ecomp: DEBUG

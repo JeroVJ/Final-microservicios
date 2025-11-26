@@ -1,0 +1,179 @@
+services:
+  # ==================== INFRAESTRUCTURA ====================
+  
+  postgres:
+    image: postgres:15-alpine
+    container_name: eco-mp-postgres
+    environment:
+      POSTGRES_USER: ecomp
+      POSTGRES_PASSWORD: ecomp123
+      POSTGRES_DB: ecomp
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - eco-mp-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ecomp"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:23.0
+    container_name: eco-mp-keycloak
+    command: start-dev --import-realm
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/ecomp
+      KC_DB_USERNAME: ecomp
+      KC_DB_PASSWORD: ecomp123
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_HEALTH_ENABLED: true
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - eco-mp-network
+
+  # ==================== MICROSERVICIOS ====================
+
+  eureka-server:
+    build: ./eureka-server
+    container_name: eco-mp-eureka
+    ports:
+      - "8761:8761"
+    networks:
+      - eco-mp-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  api-gateway:
+    build: ./api-gateway
+    container_name: eco-mp-gateway
+    ports:
+      - "8082:8082"
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      # Para validar tokens, usamos la URL interna de Keycloak
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUERURI: http://localhost:8080/realms/eco-mp
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWKSETURI: http://keycloak:8080/realms/eco-mp/protocol/openid-connect/certs
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+    networks:
+      - eco-mp-network
+
+  auth-service:
+    build: ./auth-service
+    container_name: eco-mp-auth
+    ports:
+      - "8083:8083"
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      KEYCLOAK_AUTH_SERVER_URL: http://keycloak:8080
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/ecomp
+      SPRING_DATASOURCE_USERNAME: ecomp
+      SPRING_DATASOURCE_PASSWORD: ecomp123
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+    networks:
+      - eco-mp-network
+
+  user-service:
+    build: ./user-service
+    container_name: eco-mp-user
+    ports:
+      - "8084:8084"
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/ecomp
+      SPRING_DATASOURCE_USERNAME: ecomp
+      SPRING_DATASOURCE_PASSWORD: ecomp123
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      - eco-mp-network
+
+  service-catalog:
+    build: ./service-catalog
+    container_name: eco-mp-catalog
+    ports:
+      - "8085:8085"
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/ecomp
+      SPRING_DATASOURCE_USERNAME: ecomp
+      SPRING_DATASOURCE_PASSWORD: ecomp123
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      - eco-mp-network
+
+  cart-service:
+    build: ./cart-service
+    container_name: eco-mp-cart
+    ports:
+      - "8086:8086"
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/ecomp
+      SPRING_DATASOURCE_USERNAME: ecomp
+      SPRING_DATASOURCE_PASSWORD: ecomp123
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      - eco-mp-network
+
+  review-service:
+    build: ./review-service
+    container_name: eco-mp-review
+    ports:
+      - "8087:8087"
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/ecomp
+      SPRING_DATASOURCE_USERNAME: ecomp
+      SPRING_DATASOURCE_PASSWORD: ecomp123
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      - eco-mp-network
+
+volumes:
+  postgres_data:
+
+networks:
+  eco-mp-network:
+    driver: bridge
