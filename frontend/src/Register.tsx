@@ -1,4 +1,11 @@
 import { useState } from "react";
+import { useMutation, gql } from "@apollo/client";
+
+const REGISTER_USER = gql`
+    mutation RegisterUser($input: RegisterInput!) {
+        register(input: $input)
+    }
+`;
 
 type RegisterProps = {
     onClose: () => void;
@@ -15,7 +22,19 @@ export default function Register({ onClose, onSuccess }: RegisterProps) {
         lastName: "",
     });
     const [error, setError] = useState("");
-    const [loading, setLoading] = useState(false);
+
+    const [register, { loading }] = useMutation(REGISTER_USER, {
+        onCompleted: (data) => {
+            if (data.register) {
+                onSuccess();
+            } else {
+                setError("Error al registrar usuario");
+            }
+        },
+        onError: (err) => {
+            setError(err.message || "Error al registrar usuario");
+        },
+    });
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -31,35 +50,17 @@ export default function Register({ onClose, onSuccess }: RegisterProps) {
             return;
         }
 
-        setLoading(true);
-
-        try {
-            const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8082";
-            const response = await fetch(`${API_URL}/auth/register`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
+        await register({
+            variables: {
+                input: {
                     username: formData.username,
                     email: formData.email,
                     password: formData.password,
                     firstName: formData.firstName,
                     lastName: formData.lastName,
-                }),
-            });
-
-            if (response.ok) {
-                onSuccess();
-            } else {
-                const text = await response.text();
-                setError(text || "Error al registrar usuario");
-            }
-        } catch (err) {
-            setError("Error de conexión. Intenta de nuevo.");
-        } finally {
-            setLoading(false);
-        }
+                },
+            },
+        });
     };
 
     return (
