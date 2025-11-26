@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { GET_SERVICES } from "./queries";
+import { GET_SERVICES, GET_CURRENT_USER_PROFILE } from "./queries";
 import ServiceDetail from "./ServiceDetail";
 import UserProfile from "./UserProfile";
 import ShoppingCart from "./ShoppingCart";
-import Register from "./Register";
+import CreateService from "./CreateService";
 import { useAuth } from "./auth";
 import { useQuery } from "@apollo/client/react";
 
@@ -17,82 +17,35 @@ type Service = {
     category?: string | null;
 };
 
+type UserProfileType = {
+    keycloakId: string;
+    username: string;
+    email: string;
+    role: string;
+};
+
 type ServicesData = { services: Service[] };
 type ServicesVars = { filter?: string | null };
 
 export default function App() {
-    const { ready, authenticated, user, login, logout } = useAuth();
+    const { user, logout } = useAuth();
     const [term, setTerm] = useState("");
     const [openId, setOpenId] = useState<string | null>(null);
     const [showProfile, setShowProfile] = useState(false);
     const [showCart, setShowCart] = useState(false);
-    const [showRegister, setShowRegister] = useState(false);
+    const [showCreateService, setShowCreateService] = useState(false);
 
     const { data, loading, error, refetch } = useQuery<ServicesData, ServicesVars>(
         GET_SERVICES,
-        { variables: { filter: "" }, skip: !authenticated }
+        { variables: { filter: "" } }
+    );
+
+    const { data: profileData } = useQuery<{ currentUserProfile: UserProfileType | null }>(
+        GET_CURRENT_USER_PROFILE
     );
 
     const list = data?.services ?? [];
-
-    // Pantalla de carga
-    if (!ready) {
-        return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
-                <div className="text-center">
-                    <div className="w-16 h-16 mx-auto mb-4 border-4 border-cyan-500/20 border-t-cyan-500 rounded-full animate-spin"></div>
-                    <p className="text-slate-400">Inicializando...</p>
-                </div>
-            </div>
-        );
-    }
-
-    // Pantalla de login
-    if (!authenticated) {
-        return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
-                <div className="fixed inset-0 overflow-hidden pointer-events-none">
-                    <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl animate-pulse"></div>
-                    <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
-                </div>
-                <div className="relative bg-slate-900/50 backdrop-blur-xl border border-white/10 rounded-3xl p-12 text-center max-w-md mx-4">
-                    <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-cyan-400 to-purple-600 flex items-center justify-center">
-                        <span className="text-white font-bold text-3xl">E</span>
-                    </div>
-                    <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent mb-3">
-                        Eco-MP
-                    </h1>
-                    <p className="text-slate-400 mb-8">
-                        Marketplace de Turismo Ecológico
-                    </p>
-                    <button
-                        onClick={login}
-                        className="w-full px-8 py-4 rounded-2xl bg-gradient-to-r from-cyan-500 to-purple-600 text-white font-medium hover:shadow-lg hover:shadow-cyan-500/25 transition-all duration-300 hover:scale-105 active:scale-95 mb-4"
-                    >
-                        Iniciar Sesión
-                    </button>
-                    <button
-                        onClick={() => setShowRegister(true)}
-                        className="w-full px-8 py-4 rounded-2xl bg-white/5 border border-white/10 text-white font-medium hover:bg-white/10 transition-all duration-300"
-                    >
-                        Crear Cuenta
-                    </button>
-                    <p className="text-slate-500 text-sm mt-6">
-                        Usuarios de prueba: client1 / provider1 (password123)
-                    </p>
-                </div>
-                {showRegister && (
-                    <Register
-                        onClose={() => setShowRegister(false)}
-                        onSuccess={() => {
-                            setShowRegister(false);
-                            alert("¡Registro exitoso! Ahora puedes iniciar sesión.");
-                        }}
-                    />
-                )}
-            </div>
-        );
-    }
+    const isProvider = profileData?.currentUserProfile?.role === "PROVIDER";
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
@@ -112,12 +65,26 @@ export default function App() {
                         </h1>
                     </div>
                     <div className="flex items-center gap-4">
+                        {isProvider && (
+                            <button
+                                onClick={() => setShowCreateService(true)}
+                                className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-600 text-white text-sm font-medium hover:shadow-lg hover:shadow-emerald-500/30 transition-all duration-300 flex items-center gap-2"
+                            >
+                                <span>➕</span>
+                                Crear Servicio
+                            </button>
+                        )}
                         <button
                             onClick={() => setShowProfile(true)}
                             className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-sm font-medium hover:bg-white/10 hover:border-white/20 transition-all duration-300 flex items-center gap-2"
                         >
                             <span>👤</span>
                             {user?.username && <span>{user.username}</span>}
+                            {isProvider && (
+                                <span className="ml-1 px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-xs">
+                                    Proveedor
+                                </span>
+                            )}
                         </button>
                         <button
                             onClick={() => setShowCart(true)}
@@ -235,7 +202,15 @@ export default function App() {
                         <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-slate-800/50 border border-white/10 flex items-center justify-center">
                             <span className="text-4xl">🔍</span>
                         </div>
-                        <p className="text-slate-400">No se encontraron servicios</p>
+                        <p className="text-slate-400 mb-4">No se encontraron servicios</p>
+                        {isProvider && (
+                            <button
+                                onClick={() => setShowCreateService(true)}
+                                className="px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-600 text-white font-medium hover:shadow-lg hover:shadow-emerald-500/30 transition-all"
+                            >
+                                ¡Crea el primer servicio!
+                            </button>
+                        )}
                     </div>
                 )}
             </main>
@@ -243,6 +218,12 @@ export default function App() {
             {openId && <ServiceDetail id={openId} onClose={() => setOpenId(null)} />}
             {showProfile && <UserProfile onClose={() => setShowProfile(false)} />}
             {showCart && <ShoppingCart onClose={() => setShowCart(false)} />}
+            {showCreateService && (
+                <CreateService 
+                    onClose={() => setShowCreateService(false)} 
+                    onCreated={() => refetch({ filter: "" })}
+                />
+            )}
         </div>
     );
 }
