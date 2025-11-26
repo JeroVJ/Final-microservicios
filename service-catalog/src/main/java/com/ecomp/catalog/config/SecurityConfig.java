@@ -1,5 +1,6 @@
 package com.ecomp.catalog.config;
 
+import jakarta.ws.rs.HttpMethod;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -36,6 +37,7 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/**").permitAll()
                         .requestMatchers("/services").permitAll()
                         .requestMatchers("/services/{id}").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/services").permitAll()
                         .requestMatchers("/services/category/**").permitAll()
                         .anyRequest().authenticated()
                 )
