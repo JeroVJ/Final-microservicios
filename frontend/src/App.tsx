@@ -3,6 +3,7 @@ import { GET_SERVICES } from "./queries";
 import ServiceDetail from "./ServiceDetail";
 import UserProfile from "./UserProfile";
 import ShoppingCart from "./ShoppingCart";
+import Register from "./Register";
 import { useAuth } from "./auth";
 import { useQuery } from "@apollo/client/react";
 
@@ -25,6 +26,7 @@ export default function App() {
     const [openId, setOpenId] = useState<string | null>(null);
     const [showProfile, setShowProfile] = useState(false);
     const [showCart, setShowCart] = useState(false);
+    const [showRegister, setShowRegister] = useState(false);
 
     const { data, loading, error, refetch } = useQuery<ServicesData, ServicesVars>(
         GET_SERVICES,
@@ -65,14 +67,29 @@ export default function App() {
                     </p>
                     <button
                         onClick={login}
-                        className="w-full px-8 py-4 rounded-2xl bg-gradient-to-r from-cyan-500 to-purple-600 text-white font-medium hover:shadow-lg hover:shadow-cyan-500/25 transition-all duration-300 hover:scale-105 active:scale-95"
+                        className="w-full px-8 py-4 rounded-2xl bg-gradient-to-r from-cyan-500 to-purple-600 text-white font-medium hover:shadow-lg hover:shadow-cyan-500/25 transition-all duration-300 hover:scale-105 active:scale-95 mb-4"
                     >
                         Iniciar Sesión
+                    </button>
+                    <button
+                        onClick={() => setShowRegister(true)}
+                        className="w-full px-8 py-4 rounded-2xl bg-white/5 border border-white/10 text-white font-medium hover:bg-white/10 transition-all duration-300"
+                    >
+                        Crear Cuenta
                     </button>
                     <p className="text-slate-500 text-sm mt-6">
                         Usuarios de prueba: client1 / provider1 (password123)
                     </p>
                 </div>
+                {showRegister && (
+                    <Register
+                        onClose={() => setShowRegister(false)}
+                        onSuccess={() => {
+                            setShowRegister(false);
+                            alert("¡Registro exitoso! Ahora puedes iniciar sesión.");
+                        }}
+                    />
+                )}
             </div>
         );
     }

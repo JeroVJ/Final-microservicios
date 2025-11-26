@@ -132,6 +132,14 @@ input QuestionInput {
     question: String!
 }
 
+input RegisterInput {
+    username: String!
+    email: String!
+    password: String!
+    firstName: String
+    lastName: String
+}
+
 # ==================== QUERIES ====================
 
 type Query {
@@ -153,6 +161,9 @@ type Query {
 # ==================== MUTATIONS ====================
 
 type Mutation {
+    # Autenticación
+    register(input: RegisterInput!): Boolean!
+    
     # Servicios (solo proveedores)
     createService(input: ServiceInput!): Service!
     updateService(id: ID!, input: ServiceInput!): Service!

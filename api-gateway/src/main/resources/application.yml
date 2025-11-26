@@ -26,28 +26,28 @@ spring:
             - Path=/api/auth/**
           filters:
             - StripPrefix=1
-        
+
         - id: user-service
           uri: lb://user-service
           predicates:
             - Path=/api/users/**
           filters:
             - StripPrefix=1
-        
+
         - id: catalog-service
           uri: lb://service-catalog
           predicates:
             - Path=/api/services/**,/api/questions/**
           filters:
             - StripPrefix=1
-        
+
         - id: cart-service
           uri: lb://cart-service
           predicates:
             - Path=/api/cart/**
           filters:
             - StripPrefix=1
-        
+
         - id: review-service
           uri: lb://review-service
           predicates:
@@ -91,6 +91,8 @@ services:
     url: ${SERVICES_CART_URL:http://localhost:8086}
   review:
     url: ${SERVICES_REVIEW_URL:http://localhost:8087}
+  auth:
+    url: ${SERVICES_AUTH_URL:http://localhost:8083}
 
 management:
   endpoints:

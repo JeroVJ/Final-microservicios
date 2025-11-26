@@ -1,5 +1,12 @@
 import { gql } from "@apollo/client";
 
+// Autenticación
+export const REGISTER_USER = gql`
+    mutation RegisterUser($input: RegisterInput!) {
+        register(input: $input)
+    }
+`;
+
 // Servicios
 export const GET_SERVICES = gql`
     query GetServices($filter: String) {
@@ -121,5 +128,25 @@ export const CLEAR_CART = gql`
 export const CHECKOUT_CART = gql`
     mutation CheckoutCart {
         checkoutCart
+    }
+`;
+
+// Servicios - Crear (para proveedores)
+export const CREATE_SERVICE = gql`
+    mutation CreateService($input: ServiceInput!) {
+        createService(input: $input) {
+            id
+            name
+            description
+            price
+            category
+            city
+        }
+    }
+`;
+
+export const DELETE_SERVICE = gql`
+    mutation DeleteService($id: ID!) {
+        deleteService(id: $id)
     }
 `;

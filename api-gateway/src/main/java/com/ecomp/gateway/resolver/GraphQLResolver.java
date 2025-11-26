@@ -66,6 +66,12 @@ public class GraphQLResolver {
     // ==================== MUTATIONS ====================
 
     @MutationMapping
+    public Mono<Boolean> register(@Argument RegisterInput input) {
+        log.info("GraphQL Mutation: register user {}", input.getUsername());
+        return client.register(input);
+    }
+
+    @MutationMapping
     public Mono<Service> createService(@Argument ServiceInput input, @AuthenticationPrincipal Jwt jwt) {
         log.info("GraphQL Mutation: createService");
         String token = "Bearer " + jwt.getTokenValue();

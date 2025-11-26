@@ -183,4 +183,15 @@ public class GraphQLDtos {
         private String serviceId;
         private String question;
     }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class RegisterInput {
+        private String username;
+        private String email;
+        private String password;
+        private String firstName;
+        private String lastName;
+    }
 }
